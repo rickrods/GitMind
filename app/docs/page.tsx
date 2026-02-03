@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { generateDocumentation } from '@/app/actions/gemini';
 import { useRepo } from '@/components/providers/RepoContext';
 
