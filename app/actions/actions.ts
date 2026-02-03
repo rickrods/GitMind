@@ -27,7 +27,7 @@ export const signUpAction = async (formData: FormData) => {
   const client = await createSupabaseClient();
 
   const url = process.env.VERCEL_URL
-    ? `${process.env.VERCEL_URL}/`
+    ? `https://${process.env.VERCEL_URL}/`
     : "http://localhost:3000/";
 
   const { error } = await client.auth.signUp({

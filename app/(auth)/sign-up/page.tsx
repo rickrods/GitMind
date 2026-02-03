@@ -19,7 +19,7 @@ export default async function SignUp(props: {
       <p className="text-sm text-foreground">
         Already have an account?{" "}
         <Link className="text-foreground font-medium underline" href="/sign-in">
-          Sign up
+          Sign in
         </Link>
       </p>
       <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">

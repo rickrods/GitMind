@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@google/genai": "^1.38.0",
+    "@google/genai": "^1.39.0",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/ssr": "^0.8.0",
@@ -45,5 +45,9 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "postcss": "^8.5.6",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "glob": "^13.0.1",
+    "rimraf": "^6.1.2"
   }
 }

@@ -66,7 +66,9 @@ const Sidebar: React.FC = () => {
         {user ? (
           <AuthPageSignOutButton />
         ) : (
-          <AuthSubmitButton />
+          <Button asChild className="w-full">
+            <Link href="/sign-in">Sign in</Link>
+          </Button>
         )}
       </div>
     </div>
