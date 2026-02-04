@@ -2,16 +2,21 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRepo } from '@/components/providers/RepoContext';
-import { WorkflowRun } from '@/types';
+import { WorkflowRun, GitHubIssue, PullRequest } from '@/types';
 
 const Dashboard: React.FC = () => {
   const { currentRepo, setCurrentRepo, repositories, githubService } = useRepo();
   const [workflows, setWorkflows] = useState<WorkflowRun[]>([]);
+  const [issues, setIssues] = useState<GitHubIssue[]>([]);
+  const [pullRequests, setPullRequests] = useState<PullRequest[]>([]);
   const [loadingRuns, setLoadingRuns] = useState(false);
+  const [loadingIssues, setLoadingIssues] = useState(false);
+  const [loadingPRs, setLoadingPRs] = useState(false);
 
   useEffect(() => {
-    const fetchRuns = async () => {
+    const fetchData = async () => {
       if (currentRepo && githubService) {
+        // Fetch workflows
         setLoadingRuns(true);
         try {
           const runs = await githubService.fetchWorkflows(currentRepo.owner.login, currentRepo.name);
@@ -21,9 +26,31 @@ const Dashboard: React.FC = () => {
         } finally {
           setLoadingRuns(false);
         }
+
+        // Fetch issues
+        setLoadingIssues(true);
+        try {
+          const issuesData = await githubService.fetchIssues(currentRepo.owner.login, currentRepo.name);
+          setIssues(issuesData);
+        } catch (e) {
+          console.error("Failed to load issues", e);
+        } finally {
+          setLoadingIssues(false);
+        }
+
+        // Fetch pull requests
+        setLoadingPRs(true);
+        try {
+          const prsData = await githubService.fetchPullRequests(currentRepo.owner.login, currentRepo.name);
+          setPullRequests(prsData);
+        } catch (e) {
+          console.error("Failed to load pull requests", e);
+        } finally {
+          setLoadingPRs(false);
+        }
       }
     };
-    fetchRuns();
+    fetchData();
   }, [currentRepo, githubService]);
 
   if (!currentRepo) {
@@ -33,7 +60,7 @@ const Dashboard: React.FC = () => {
           <svg className="w-10 h-10 text-github-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-white">Welcome to GitMind</h2>
+          <h2 className="text-2xl font-bold text-github-fg">Welcome to GitMind</h2>
           <p className="text-github-text max-w-md mx-auto mt-2">To get started, please login then set your GitHub Personal Access Token and Gemini API Key in the settings and add a repository via URL.</p>
         </div>
       </div>
@@ -44,12 +71,12 @@ const Dashboard: React.FC = () => {
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
       <header className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">Project Overview</h2>
+          <h2 className="text-2xl font-bold text-github-fg">Project Overview</h2>
           <p className="text-github-text">Manage your active codebases with Gemini 3 intelligence.</p>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Repositories List */}
         <div className="lg:col-span-2 space-y-4">
           <h3 className="text-sm font-semibold text-github-text uppercase tracking-wider">Repositories</h3>
@@ -84,10 +111,13 @@ const Dashboard: React.FC = () => {
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Recent CI Pipeline for current repo */}
+      {/* Stats Grid - CI, Issues, PRs */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent CI Pipelines */}
         <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-github-text uppercase tracking-wider">Active Pipelines: {currentRepo.name}</h3>
+          <h3 className="text-sm font-semibold text-github-text uppercase tracking-wider">Active Pipelines</h3>
           <div className="bg-github-dark border border-github-border rounded-lg overflow-hidden min-h-[200px]">
             {loadingRuns ? (
               <div className="flex justify-center items-center h-48">
@@ -96,7 +126,7 @@ const Dashboard: React.FC = () => {
             ) : workflows.length > 0 ? workflows.slice(0, 5).map((run) => (
               <div key={run.id} className="p-4 border-b border-github-border last:border-0 hover:bg-white/5 transition-colors">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-white truncate max-w-[150px]">{run.name}</span>
+                  <span className="text-sm font-medium text-github-fg truncate max-w-[150px]">{run.name}</span>
                   <div className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${run.conclusion === 'success' ? 'bg-github-green/20 text-github-green border border-github-green/40' :
                     run.conclusion === 'failure' ? 'bg-github-red/20 text-github-red border border-github-red/40' :
                       'bg-github-blue/20 text-github-blue animate-pulse'
@@ -115,6 +145,65 @@ const Dashboard: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Recent Issues */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-github-text uppercase tracking-wider">Recent Issues</h3>
+          <div className="bg-github-dark border border-github-border rounded-lg overflow-hidden min-h-[200px]">
+            {loadingIssues ? (
+              <div className="flex justify-center items-center h-48">
+                <div className="w-6 h-6 border-2 border-github-purple border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : issues.length > 0 ? issues.slice(0, 5).map((issue) => (
+              <div key={issue.id} className="p-4 border-b border-github-border last:border-0 hover:bg-white/5 transition-colors">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-github-fg truncate max-w-[150px]">#{issue.number}</span>
+                  <div className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${issue.state === 'open' ? 'bg-github-green/20 text-github-green border border-github-green/40' :
+                    'bg-github-purple/20 text-github-purple border border-github-purple/40'
+                    }`}>
+                    {issue.state}
+                  </div>
+                </div>
+                <p className="text-xs text-github-text line-clamp-2 mb-1">{issue.title}</p>
+                <div className="text-xs text-github-text opacity-70">
+                  {new Date(issue.created_at).toLocaleDateString()}
+                </div>
+              </div>
+            )) : (
+              <div className="p-8 text-center text-xs text-github-text opacity-50">No issues found.</div>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Pull Requests */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-github-text uppercase tracking-wider">Recent Pull Requests</h3>
+          <div className="bg-github-dark border border-github-border rounded-lg overflow-hidden min-h-[200px]">
+            {loadingPRs ? (
+              <div className="flex justify-center items-center h-48">
+                <div className="w-6 h-6 border-2 border-github-green border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : pullRequests.length > 0 ? pullRequests.slice(0, 5).map((pr) => (
+              <div key={pr.id} className="p-4 border-b border-github-border last:border-0 hover:bg-white/5 transition-colors">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-github-fg truncate max-w-[150px]">#{pr.number}</span>
+                  <div className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${pr.state === 'open' ? 'bg-github-green/20 text-github-green border border-github-green/40' :
+                    pr.merged_at ? 'bg-github-purple/20 text-github-purple border border-github-purple/40' :
+                      'bg-github-red/20 text-github-red border border-github-red/40'
+                    }`}>
+                    {pr.merged_at ? 'merged' : pr.state}
+                  </div>
+                </div>
+                <p className="text-xs text-github-text line-clamp-2 mb-1">{pr.title}</p>
+                <div className="text-xs text-github-text opacity-70">
+                  {new Date(pr.created_at).toLocaleDateString()}
+                </div>
+              </div>
+            )) : (
+              <div className="p-8 text-center text-xs text-github-text opacity-50">No pull requests found.</div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="bg-gradient-to-r from-github-purple/20 to-github-blue/20 p-6 rounded-xl border border-github-purple/30">
@@ -125,7 +214,7 @@ const Dashboard: React.FC = () => {
             </svg>
           </div>
           <div>
-            <h4 className="text-lg font-bold text-white italic">"Gemini Insight"</h4>
+            <h4 className="text-lg font-bold text-github-fg italic">"Gemini Insight"</h4>
             <p className="text-sm text-github-text">
               Codebase <span className="text-github-purple font-semibold">{currentRepo.name}</span> is currently active.
               <br />AI Suggestion: Gemini is monitoring {workflows.length} recent workflow runs for anomalies.

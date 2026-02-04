@@ -12,13 +12,14 @@ export const analyzeIssue = async (
     repo: Repository,
     repoStructure: string,
     geminiApiKey: string,
-    feedback?: string
+    feedback?: string,
+    model: string = 'gemini-3-flash-preview'
 ) => {
     const ai = getAIClient(geminiApiKey);
     const labelNames = issue.labels.map(l => l.name).join(', ');
 
     const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model,
         contents: `You are a Senior Software Engineer. Analyze this GitHub issue in the context of the repository structure and suggest a technical fix or implementation plan.
     
     Repository: ${repo.full_name}
@@ -87,13 +88,13 @@ export const analyzeIssue = async (
 export const reviewPullRequest = async (
     pr: PullRequest,
     repo: Repository,
-    geminiApiKey: string
+    geminiApiKey: string,
+    model: string = 'gemini-3-pro-preview'
 ) => {
     const ai = getAIClient(geminiApiKey);
-    // We use the already fetched diff content if available, or a placeholder if it failed to load
+    // ... logic ...
     const diffData = pr.diffContent || "Diff content could not be loaded or is too large.";
-
-    // Prepare file contents for the AI prompt
+    // ... context ...
     const fileContext = pr.files && pr.files.length > 0 ?
         pr.files.map(f => `
 --- File: ${f.filePath} ---
@@ -103,7 +104,7 @@ ${f.content}
 
 
     const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview', // Using pro model for complex task
+        model, // Using the passed model
         contents: `You are a Senior Software Engineer. Perform a rigorous code review on this PR.
     After the review, determine if you can confidently propose a concrete fix to address any issues or improvements found.
     
@@ -182,10 +183,10 @@ ${f.content}
     return result;
 };
 
-export const generateDocumentation = async (repoName: string, context: string, geminiApiKey: string) => {
+export const generateDocumentation = async (repoName: string, context: string, geminiApiKey: string, model: string = 'gemini-3-pro-preview') => {
     const ai = getAIClient(geminiApiKey);
     const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
+        model,
         contents: `Generate comprehensive technical documentation for the repository "${repoName}".
     Use the following codebase context (README/File Summary): ${context.substring(0, 50000)}
     
@@ -204,13 +205,14 @@ export const generateDocumentation = async (repoName: string, context: string, g
 
 export const triageIssue = async (
     issue: GitHubIssue,
-    geminiApiKey: string
+    geminiApiKey: string,
+    model: string = 'gemini-3-flash-preview'
 ) => {
     const ai = getAIClient(geminiApiKey);
     const labelNames = issue.labels.map(l => l.name).join(', ');
 
     const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model,
         contents: `You are a Senior Project Manager and Technical lead. Analyze this GitHub issue to determine if it has sufficient information for a developer to start working on it.
 
     Issue Title: ${issue.title}
@@ -252,12 +254,13 @@ export const analyzeWorkflowFailure = async (
     logs: string,
     repo: Repository,
     repoStructure: string,
-    geminiApiKey: string
+    geminiApiKey: string,
+    model: string = 'gemini-3-pro-preview'
 ) => {
     const ai = getAIClient(geminiApiKey);
 
     const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
+        model,
         contents: `You are a Senior DevOps and Software Engineer. Analyze these CI/CD workflow logs to identify the root cause of the failure and propose a technical fix.
     
     Repository: ${repo.full_name}

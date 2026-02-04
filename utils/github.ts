@@ -44,6 +44,14 @@ export class GitHubService {
         return res.json();
     }
 
+    async fetchPullRequest(owner: string, repo: string, prNumber: number): Promise<PullRequest> {
+        const res = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/pulls/${prNumber}`, {
+            headers: this.headers
+        });
+        if (!res.ok) throw new Error(`Failed to fetch PR #${prNumber}`);
+        return res.json();
+    }
+
     async fetchPRDiff(diffUrl: string): Promise<string> {
         const res = await fetch(diffUrl, {
             headers: {

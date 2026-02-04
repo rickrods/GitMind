@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { WorkflowRun, AIProposal } from '../../types';
 import { useRepo } from '@/components/providers/RepoContext';
-import { analyzeWorkflowAction, applyFixAction } from '@/app/actions/actions';
+import { analyzeWorkflowAction, applyFixAction, getCIAnalyses } from '@/app/actions/actions';
 import { toast } from 'react-hot-toast';
 
 export default function CIConfig() {
@@ -28,8 +28,25 @@ export default function CIConfig() {
       if (currentRepo && githubService) {
         setLoading(true);
         try {
-          const data = await githubService.fetchWorkflows(currentRepo.owner.login, currentRepo.name);
-          setWorkflows(data);
+          const [workflowData, analysesData] = await Promise.all([
+            githubService.fetchWorkflows(currentRepo.owner.login, currentRepo.name),
+            getCIAnalyses(currentRepo.owner.login, currentRepo.name)
+          ]);
+
+          const mergedWorkflows = workflowData.map(run => {
+            const analysis = analysesData.find((a: any) => Number(a.run_id) === run.id);
+            if (analysis) {
+              return {
+                ...run,
+                aiAnalysis: analysis.analysis,
+                suggestedFix: analysis.suggested_fix,
+                aiProposal: analysis.ai_proposal
+              };
+            }
+            return run;
+          });
+
+          setWorkflows(mergedWorkflows);
         } catch (e) {
           console.error(e);
         } finally {
@@ -49,6 +66,15 @@ export default function CIConfig() {
     try {
       const result = await analyzeWorkflowAction(currentRepo.owner.login, currentRepo.name, run.id);
       setAnalysisResult({ runId: run.id, ...result });
+
+      // Update the workflow in the list to cache it locally
+      setWorkflows(prev => prev.map(w => w.id === run.id ? {
+        ...w,
+        aiAnalysis: result.analysis,
+        suggestedFix: result.suggestedFix,
+        aiProposal: result.fix
+      } : w));
+
     } catch (err: any) {
       toast.error(err.message || "Analysis failed");
     } finally {
@@ -77,7 +103,7 @@ export default function CIConfig() {
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
       <header className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">CI/CD: <span className="text-github-blue">{currentRepo.name}</span></h2>
+          <h2 className="text-2xl font-bold text-github-fg">CI/CD: <span className="text-github-blue">{currentRepo.name}</span></h2>
           <p className="text-github-text">Monitor workflows and configure AI-driven deployment gates.</p>
         </div>
       </header>
@@ -85,23 +111,23 @@ export default function CIConfig() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="bg-github-dark border border-github-border p-5 rounded-xl">
           <p className="text-github-text text-xs uppercase font-bold tracking-widest mb-1">Total Runs</p>
-          <p className="text-3xl font-bold text-white">{workflows.length}</p>
+          <p className="text-3xl font-bold text-github-fg">{workflows.length}</p>
         </div>
         <div className="bg-github-dark border border-github-border p-5 rounded-xl">
           <p className="text-github-text text-xs uppercase font-bold tracking-widest mb-1">Recent Success</p>
-          <p className="text-3xl font-bold text-white">
+          <p className="text-3xl font-bold text-github-fg">
             {workflows.filter(w => w.conclusion === 'success').length}
           </p>
         </div>
         <div className="bg-github-dark border border-github-border p-5 rounded-xl">
           <p className="text-github-text text-xs uppercase font-bold tracking-widest mb-1">Failures</p>
-          <p className="text-3xl font-bold text-white">
+          <p className="text-3xl font-bold text-github-fg">
             {workflows.filter(w => w.conclusion === 'failure').length}
           </p>
         </div>
         <div className="bg-github-dark border border-github-border p-5 rounded-xl">
           <p className="text-github-text text-xs uppercase font-bold tracking-widest mb-1">Avg Duration</p>
-          <p className="text-3xl font-bold text-white">--</p>
+          <p className="text-3xl font-bold text-github-fg">--</p>
           <p className="mt-2 text-xs text-github-text italic">Needs historic data</p>
         </div>
       </div>
@@ -110,7 +136,7 @@ export default function CIConfig() {
         <div className="xl:col-span-2 space-y-6">
           <div className="bg-github-dark border border-github-border rounded-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-github-border bg-github-darker">
-              <h3 className="text-white font-bold">Recent Workflow Executions</h3>
+              <h3 className="text-github-fg font-bold">Recent Workflow Executions</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -127,7 +153,21 @@ export default function CIConfig() {
                   {loading ? (
                     <tr><td colSpan={5} className="py-8 text-center"><div className="inline-block w-6 h-6 border-2 border-github-blue border-t-transparent rounded-full animate-spin"></div></td></tr>
                   ) : workflows.length > 0 ? workflows.map((run) => (
-                    <tr key={run.id} className={`border-b border-github-border hover:bg-white/5 transition-colors group ${analysisResult?.runId === run.id ? 'bg-github-blue/5' : ''}`}>
+                    <tr
+                      key={run.id}
+                      onClick={() => {
+                        if (run.aiAnalysis) {
+                          setAnalysisResult({
+                            runId: run.id,
+                            analysis: run.aiAnalysis,
+                            suggestedFix: run.suggestedFix || '',
+                            shouldProposeFix: !!run.aiProposal,
+                            fix: run.aiProposal
+                          });
+                        }
+                      }}
+                      className={`border-b border-github-border hover:bg-white/5 transition-colors group cursor-pointer ${analysisResult?.runId === run.id ? 'bg-github-blue/5' : ''}`}
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <div className={`w-2.5 h-2.5 rounded-full ${run.conclusion === 'success' ? 'bg-github-green' :
@@ -142,7 +182,7 @@ export default function CIConfig() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-bold text-white">
+                      <td className="px-6 py-4 font-bold text-github-fg">
                         <div className="flex flex-col">
                           <span className="truncate max-w-[200px]">{run.name}</span>
                           <span className="text-[10px] text-github-text font-normal mt-0.5">{new Date(run.created_at).toLocaleString()}</span>
@@ -197,7 +237,7 @@ export default function CIConfig() {
 
         <div className="space-y-6">
           <div className="bg-github-dark border border-github-border rounded-xl p-6 min-h-[400px]">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-github-fg mb-4 flex items-center gap-2">
               <svg className="w-5 h-5 text-github-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -230,7 +270,7 @@ export default function CIConfig() {
                 </div>
 
                 <div className="p-4 bg-github-darker border border-github-border rounded-lg">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-2">Suggested Fix</h4>
+                  <h4 className="text-xs font-bold text-github-fg uppercase tracking-widest mb-2">Suggested Fix</h4>
                   <div className="prose prose-invert prose-xs max-w-none text-github-text font-mono text-[11px] whitespace-pre-wrap">
                     {analysisResult.suggestedFix}
                   </div>

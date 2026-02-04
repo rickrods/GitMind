@@ -58,12 +58,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" disableTransitionOnChange>
           <RepoProvider>
-            <div className="flex">
-              <Sidebar />
-              <main className="flex-1">
-                {children}
-              </main>
-            </div>
+            {children}
           </RepoProvider>
         </ThemeProvider>
       </body>

@@ -100,7 +100,7 @@ export default function SettingsPage() {
   return (
     <>
       <div className="space-y-8 max-w-4xl mx-auto pb-10">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-github-fg">
           Settings
         </h1>
 
@@ -113,16 +113,15 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* API Keys Section */}
-        <section className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm">
-          <h2 className="text-lg font-semibold mb-6 dark:text-white flex items-center gap-2">
-            <Shield size={20} className="text-blue-500" /> Github Config
+        <section className="bg-github-dark p-6 rounded-xl border border-github-border shadow-sm">
+          <h2 className="text-lg font-semibold mb-6 text-github-fg flex items-center gap-2">
+            <Shield size={20} className="text-github-blue" /> GitHub Config
           </h2>
 
           <div className="space-y-6">
             {/* GitHub Repository */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <label className="text-sm font-medium text-github-text flex items-center gap-2">
                 <BrandIcon icon={siGithub} size={16} /> GitHub Repository URL
               </label>
               <div className="flex gap-2">
@@ -132,13 +131,13 @@ export default function SettingsPage() {
                   value={newRepoUrl}
                   onChange={(e) => setNewRepoUrl(e.target.value)}
                   placeholder="https://github.com/owner/repo"
-                  className="flex-1 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
+                  className="flex-1 bg-github-darker border border-github-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-github-blue outline-none text-white"
                   autoComplete="off"
                 />
                 <button
                   onClick={handleAddRepo}
                   disabled={isAddingRepo || loading}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-github-blue hover:bg-opacity-90 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
                 >
                   {isAddingRepo || loading ? "Adding..." : "Add"}
                 </button>
@@ -147,7 +146,7 @@ export default function SettingsPage() {
 
             {/* GitHub PAT */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <label className="text-sm font-medium text-github-text flex items-center gap-2">
                 <Key size={16} /> GitHub Personal Access Token
               </label>
               <div className="flex gap-2">
@@ -157,32 +156,32 @@ export default function SettingsPage() {
                   value={newToken}
                   onChange={(e) => setNewToken(e.target.value)}
                   placeholder={token ? "Token is configured (ghp_...)" : "ghp_..."}
-                  className="flex-1 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
+                  className="flex-1 bg-github-darker border border-github-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-github-blue outline-none text-white"
                 />
                 <button
                   onClick={handleSaveToken}
                   disabled={isSavingToken}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-github-blue hover:bg-opacity-90 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
                 >
                   {isSavingToken ? "Saving..." : "Save"}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Create a <a href="https://github.com/settings/tokens" target="_blank" className="text-blue-500 hover:underline">Classic Token</a> with `repo` scope.
+              <p className="text-xs text-github-text">
+                Create a <a href="https://github.com/settings/tokens" target="_blank" className="text-github-blue hover:underline">Classic Token</a> with `repo` scope.
               </p>
             </div>
           </div>
         </section>
 
-        <section className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm">
-          <h2 className="text-lg font-semibold mb-6 dark:text-white flex items-center gap-2">
-            <Shield size={20} className="text-blue-500" /> Gemini Config
+        <section className="bg-github-dark p-6 rounded-xl border border-github-border shadow-sm">
+          <h2 className="text-lg font-semibold mb-6 text-github-fg flex items-center gap-2">
+            <Zap size={20} className="text-github-purple" /> Gemini Config
           </h2>
           <div className="space-y-6">
             {/* Gemini API Key */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                <Zap size={16} /> Gemini API Key
+              <label className="text-sm font-medium text-github-text flex items-center gap-2">
+                <Zap size={16} className="text-github-purple" /> Gemini API Key
               </label>
               <div className="flex gap-2">
                 <input
@@ -190,12 +189,12 @@ export default function SettingsPage() {
                   value={newGeminiApiKey}
                   onChange={(e) => setNewGeminiApiKey(e.target.value)}
                   placeholder={geminiApiKey ? "API Key is set" : "Enter Gemini API Key"}
-                  className="flex-1 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
+                  className="flex-1 bg-github-darker border border-github-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-github-purple outline-none text-white"
                 />
                 <button
                   onClick={handleSaveGeminiApiKey}
                   disabled={isSavingGeminiKey}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-github-purple hover:bg-opacity-90 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
                 >
                   {isSavingGeminiKey ? "Saving..." : "Save"}
                 </button>
@@ -203,20 +202,20 @@ export default function SettingsPage() {
             </div>
             {/* Gemini Model Selection */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                <Zap size={16} /> Gemini Model
+              <label className="text-sm font-medium text-github-text flex items-center gap-2">
+                <Zap size={16} className="text-github-purple" /> Gemini Model
               </label>
               <div className="flex gap-2">
                 <CustomSelect
                   options={modelOptions}
                   value={model} // Use local state 'model' for the dropdown's value
                   onChange={setModel} // Update local state 'model' on change
-                  className="flex-1 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none dark:text-white"
+                  className="flex-1 bg-github-darker border border-github-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-github-purple outline-none text-white"
                 />
                 <button
                   onClick={handleSaveGeminiModel}
                   disabled={isSavingGeminiKey} // Re-using state for saving model
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-github-purple hover:bg-opacity-90 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
                 >
                   {isSavingGeminiKey ? "Saving..." : "Save"}
                 </button>
@@ -225,22 +224,22 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        <section className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm">
+        <section className="bg-github-dark p-6 rounded-xl border border-github-border shadow-sm">
           <div className="space-y-6">
-            <h2 className="text-lg font-semibold mb-4 dark:text-white">
+            <h2 className="text-lg font-semibold mb-4 text-github-fg">
               Appearance
             </h2>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setTheme("light")}
-                className={`px-4 py-2 rounded-lg border ${theme === "light" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 dark:border-slate-700 dark:text-gray-300"
+                className={`px-4 py-2 rounded-lg border ${theme === "light" ? "border-github-blue bg-github-border text-github-text" : "border-github-border text-github-text opacity-50"
                   }`}
               >
                 Light Mode
               </button>
               <button
                 onClick={() => setTheme("dark")}
-                className={`px-4 py-2 rounded-lg border ${theme === "dark" ? "border-blue-500 bg-slate-700 text-white" : "border-gray-200 dark:border-slate-700 dark:text-gray-300"
+                className={`px-4 py-2 rounded-lg border ${theme === "dark" ? "border-github-blue bg-github-border text-github-fg" : "border-github-border text-github-text"
                   }`}
               >
                 Dark Mode

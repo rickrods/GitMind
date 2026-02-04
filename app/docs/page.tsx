@@ -3,17 +3,40 @@
 
 import { useState, useEffect } from 'react';
 import { generateDocumentation } from '@/app/actions/gemini';
-import { useRepo } from '@/components/providers/RepoContext';
+import { useRepo } from '../../components/providers/RepoContext';
+import { toast } from 'react-hot-toast';
+import { getRepoDocumentation, saveRepoDocumentation } from '@/app/actions/actions';
 
 export default function Documentation() {
-  const { currentRepo, githubService, geminiApiKey, setError } = useRepo();
+  const { currentRepo, githubService, geminiApiKey, geminiModel, setError } = useRepo();
   const [generating, setGenerating] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [docContent, setDocContent] = useState<string | null>(null);
 
   useEffect(() => {
-    // Clear docs when repo changes
-    setDocContent(null);
+    const fetchDoc = async () => {
+      if (currentRepo) {
+        setDocContent(null);
+        setLoading(true);
+        try {
+          const content = await getRepoDocumentation(currentRepo.owner.login, currentRepo.name);
+          setDocContent(content);
+        } catch (e) {
+          console.error("Failed to fetch doc:", e);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    fetchDoc();
   }, [currentRepo]);
+
+  const handleCopy = () => {
+    if (!docContent) return;
+    navigator.clipboard.writeText(docContent)
+      .then(() => toast.success("Copied to clipboard!"))
+      .catch(() => toast.error("Failed to copy."));
+  };
 
   const handleGenerate = async () => {
     if (!currentRepo || !githubService) return;
@@ -31,8 +54,13 @@ export default function Documentation() {
         console.warn("Could not fetch README", e);
       }
 
-      const content = await generateDocumentation(currentRepo.name, context, geminiApiKey);
-      setDocContent(content || null);
+      const content = await generateDocumentation(currentRepo.name, context, geminiApiKey, geminiModel || 'gemini-3-pro-preview');
+      if (content) {
+        setDocContent(content);
+        await saveRepoDocumentation(currentRepo.owner.login, currentRepo.name, content);
+      } else {
+        setDocContent(null);
+      }
     } catch (error) {
       console.error("Documentation generation failed", error);
       setError("Documentation generation failed. Check your Gemini API key and permissions.");
@@ -47,7 +75,7 @@ export default function Documentation() {
     <div className="p-8 max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
       <header className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">Documentation Studio</h2>
+          <h2 className="text-2xl font-bold text-github-fg">Documentation Studio</h2>
           <p className="text-github-text">Generate technical manuals for <span className="text-github-blue font-semibold">{currentRepo.name}</span>.</p>
         </div>
         <div className="flex gap-3">
@@ -61,12 +89,12 @@ export default function Documentation() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             )}
-            Generate Wiki
+            Generate Docs
           </button>
         </div>
       </header>
 
-      {!docContent && !generating ? (
+      {!docContent && !generating && !loading ? (
         <div className="border-2 border-dashed border-github-border rounded-xl py-24 flex flex-col items-center justify-center text-github-text space-y-4">
           <div className="p-4 bg-github-border/30 rounded-full">
             <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,19 +102,23 @@ export default function Documentation() {
             </svg>
           </div>
           <div className="text-center">
-            <h3 className="text-lg font-bold text-white mb-1">No Documentation for {currentRepo.name}</h3>
+            <h3 className="text-lg font-bold text-github-fg mb-1">No Documentation for {currentRepo.name}</h3>
             <p className="text-sm">Click "Generate Wiki" to have Gemini index this specific codebase.</p>
           </div>
         </div>
-      ) : generating ? (
+      ) : generating || loading ? (
         <div className="py-24 flex flex-col items-center justify-center space-y-6">
           <div className="relative">
             <div className="w-20 h-20 border-4 border-github-purple/20 rounded-full"></div>
             <div className="absolute top-0 left-0 w-20 h-20 border-4 border-github-purple border-t-transparent rounded-full animate-spin"></div>
           </div>
           <div className="text-center space-y-2">
-            <h3 className="text-xl font-bold text-white">Synthesizing Knowledge from {currentRepo.name}...</h3>
-            <p className="text-github-text animate-pulse">Mapping architecture patterns and logic flows from README.</p>
+            <h3 className="text-xl font-bold text-github-fg">
+              {generating ? `Synthesizing Knowledge from ${currentRepo.name}...` : `Loading Documentation for ${currentRepo.name}...`}
+            </h3>
+            <p className="text-github-text animate-pulse">
+              {generating ? "Mapping architecture patterns and logic flows from README." : "Retrieving analysis from the persistent layer."}
+            </p>
           </div>
         </div>
       ) : (
@@ -95,17 +127,20 @@ export default function Documentation() {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-github-purple rounded-lg flex items-center justify-center text-white font-bold">DOC</div>
               <div>
-                <h3 className="text-lg font-bold text-white">System Guide: {currentRepo.name}</h3>
+                <h3 className="text-lg font-bold text-github-fg">System Guide: {currentRepo.name}</h3>
                 <span className="text-xs text-github-text">Published via GitMind AI v3.0</span>
               </div>
             </div>
-            <button className="text-github-blue hover:underline text-sm font-semibold">
+            <button
+              onClick={handleCopy}
+              className="text-github-blue hover:underline text-sm font-semibold"
+            >
               Copy as Markdown
             </button>
           </div>
 
           <div className="prose prose-invert prose-blue max-w-none">
-            {docContent?.split('\n').map((line, i) => (
+            {docContent?.split('\n').map((line: string, i: number) => (
               <p key={i} className="mb-4 text-github-text leading-relaxed whitespace-pre-wrap">
                 {line}
               </p>

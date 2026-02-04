@@ -18,7 +18,7 @@ export const signInAction = async (formData: FormData) => {
     return encodedRedirect("error", "/sign-in", error.message);
   }
 
-  return redirect("/");
+  return redirect("/dashboard");
 };
 
 export const signUpAction = async (formData: FormData) => {
@@ -168,10 +168,211 @@ export async function getIssueAnalyses(repoOwner: string, repoName: string) {
   return data;
 }
 
+// PR Analysis Actions
+export async function savePRAnalysis(
+  repoOwner: string,
+  repoName: string,
+  prNumber: number,
+  analysis: any,
+  aiProposal?: any
+) {
+  const user = await getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const client = await createSupabaseClient();
+  const { error } = await client
+    .from('pr_analyses')
+    .upsert({
+      repo_owner: repoOwner,
+      repo_name: repoName,
+      pr_number: prNumber,
+      analysis,
+      ai_proposal: aiProposal,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'repo_owner,repo_name,pr_number' });
+
+  if (error) throw new Error(error.message);
+  return { success: true };
+}
+
+export async function getPRAnalyses(repoOwner: string, repoName: string) {
+  const user = await getUser();
+  if (!user) return [];
+
+  const client = await createSupabaseClient();
+  const { data, error } = await client
+    .from('pr_analyses')
+    .select('*')
+    .eq('repo_owner', repoOwner)
+    .eq('repo_name', repoName);
+
+  if (error) {
+    console.error("Error fetching PR analyses:", error);
+    return [];
+  }
+  return data;
+}
+
 // CI Analysis Actions
-import { analyzeWorkflowFailure } from "@/app/actions/gemini";
+export async function saveCIAnalysis(
+  repoOwner: string,
+  repoName: string,
+  runId: number,
+  analysis: string,
+  suggestedFix: string,
+  aiProposal?: any
+) {
+  const user = await getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const client = await createSupabaseClient();
+  const { error } = await client
+    .from('ci_analyses')
+    .upsert({
+      repo_owner: repoOwner,
+      repo_name: repoName,
+      run_id: runId,
+      analysis,
+      suggested_fix: suggestedFix,
+      ai_proposal: aiProposal,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'repo_owner,repo_name,run_id' });
+
+  if (error) throw new Error(error.message);
+  return { success: true };
+}
+
+export async function getCIAnalyses(repoOwner: string, repoName: string) {
+  const user = await getUser();
+  if (!user) return [];
+
+  const client = await createSupabaseClient();
+  const { data, error } = await client
+    .from('ci_analyses')
+    .select('*')
+    .eq('repo_owner', repoOwner)
+    .eq('repo_name', repoName);
+
+  if (error) {
+    console.error("Error fetching CI analyses:", error);
+    return [];
+  }
+  return data;
+}
+
+// Documentation Persistence Actions
+export async function saveRepoDocumentation(repoOwner: string, repoName: string, content: string) {
+  const user = await getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const client = await createSupabaseClient();
+  const { error } = await client
+    .from('repo_documentation')
+    .upsert({
+      repo_owner: repoOwner,
+      repo_name: repoName,
+      content,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'repo_owner,repo_name' });
+
+  if (error) throw new Error(error.message);
+  return { success: true };
+}
+
+export async function getRepoDocumentation(repoOwner: string, repoName: string) {
+  const user = await getUser();
+  if (!user) return null;
+
+  const client = await createSupabaseClient();
+  const { data, error } = await client
+    .from('repo_documentation')
+    .select('content')
+    .eq('repo_owner', repoOwner)
+    .eq('repo_name', repoName)
+    .single();
+
+  if (error) {
+    if (error.code !== 'PGRST116') { // PGRST116 is "No rows found"
+      console.error("Error fetching repo docs:", error);
+    }
+    return null;
+  }
+  return data.content;
+}
+
+// CI Analysis Actions
+// CI & PR Analysis Actions
+import { analyzeWorkflowFailure, reviewPullRequest } from "@/app/actions/gemini";
 import { GitHubService } from "@/utils/github";
-import { AIProposal, Repository } from "@/types";
+import { AIProposal, Repository, PullRequest } from "@/types";
+
+export async function analyzePullRequestAction(owner: string, repo: string, prNumber: number) {
+  const user = await getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const settings = await getProfileSettings();
+  if (!settings?.github_pat || !settings?.gemini_api_key) {
+    throw new Error("GitHub PAT or Gemini API Key missing.");
+  }
+
+  const gh = new GitHubService(settings.github_pat);
+
+  // 1. Fetch PR details
+  const pr = await gh.fetchPullRequest(owner, repo, prNumber);
+
+  // 2. Fetch diff content (Server-side fetch avoids CORS)
+  const diffContent = await gh.fetchPRDiff(pr.diff_url);
+
+  // 3. Parse changed file paths from the diff
+  const changedFilePaths: string[] = [];
+  const diffLines = diffContent.split('\n');
+  const diffFileRegex = /^diff --git a\/(.*?) b\/(.*?)$/;
+  for (const line of diffLines) {
+    const match = line.match(diffFileRegex);
+    if (match && match[1]) {
+      changedFilePaths.push(match[1]);
+    }
+  }
+
+  // 4. Fetch content for each changed file
+  const fileContents = await Promise.all(
+    changedFilePaths.map(async (path) => {
+      try {
+        const { content } = await gh.fetchFileContent(owner, repo, path, pr.head.ref);
+        return { filePath: path, content };
+      } catch (fileError) {
+        console.warn(`Could not fetch content for file ${path}:`, fileError);
+        return { filePath: path, content: `Error: Could not fetch content. ${fileError instanceof Error ? fileError.message : String(fileError)}` };
+      }
+    })
+  );
+
+  const repoDetails = await gh.fetchRepoDetails(owner, repo);
+  const prWithDiffAndFiles = { ...pr, diffContent, files: fileContents };
+
+  // 5. Run AI Review
+  const reviewResult = await reviewPullRequest(
+    prWithDiffAndFiles,
+    repoDetails,
+    settings.gemini_api_key,
+    settings.gemini_model || 'gemini-3-pro-preview'
+  );
+
+  // 6. Save analysis to database
+  await savePRAnalysis(
+    owner,
+    repo,
+    pr.number,
+    reviewResult,
+    reviewResult.fix
+  );
+
+  return {
+    reviewResult,
+    diffContent,
+    fileContents
+  };
+}
 
 export async function analyzeWorkflowAction(owner: string, repo: string, runId: number) {
   const user = await getUser();
@@ -195,7 +396,29 @@ export async function analyzeWorkflowAction(owner: string, repo: string, runId: 
   const structure = await gh.getRepoStructure(owner, repo, repoDetails.default_branch);
   const structureString = structure.map(item => `${item.type === 'tree' ? '[DIR]' : '[FILE]'} ${item.path}`).join('\n');
 
-  return await analyzeWorkflowFailure(logs, repoDetails, structureString, settings.gemini_api_key);
+  const result = await analyzeWorkflowFailure(
+    logs,
+    repoDetails,
+    structureString,
+    settings.gemini_api_key,
+    settings.gemini_model || 'gemini-3-pro-preview'
+  );
+
+  // Save analysis to database
+  try {
+    await saveCIAnalysis(
+      owner,
+      repo,
+      runId,
+      result.analysis,
+      result.suggestedFix,
+      result.fix
+    );
+  } catch (err) {
+    console.error("Failed to save CI analysis:", err);
+  }
+
+  return result;
 }
 
 export async function applyFixAction(repo: Repository, proposal: AIProposal) {

@@ -160,4 +160,7 @@ export interface WorkflowRun {
     name: string;
     full_name: string;
   };
+  aiAnalysis?: string;
+  suggestedFix?: string;
+  aiProposal?: AIProposal;
 }

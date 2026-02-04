@@ -24,6 +24,10 @@
 - 🧐 **Code Review** — Rigorous PR reviews with quality scoring, logic checks, and best practice alignment.
 
 ---
+## 🚀 Try it out
+
+[**https://git-mind-delta.vercel.app**](https://git-mind-delta.vercel.app/)
+
 
 ## 🛠️ Local Setup
 
@@ -79,6 +83,11 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 - 📚 [Next.js Documentation](https://nextjs.org/docs)
 
 ---
+
+## 🚀 Try it out
+
+[**https://git-mind-delta.vercel.app**](https://git-mind-delta.vercel.app/)
+
 
 ## 📄 License
 

@@ -72,6 +72,15 @@
       height: 0;
     }
   }
+
+  /* GitHub Design Tokens */
+  --color-github-dark: var(--github-background);
+  --color-github-darker: var(--github-darker);
+  --color-github-border: var(--github-border);
+  --color-github-text: var(--github-text);
+  --color-github-blue: #4f8cc9;
+  --color-github-purple: #8957e5;
+  --color-github-fg: var(--github-fg);
 }
 
 /*
@@ -134,6 +143,13 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* GitHub Tokens Light Mode */
+    --github-background: #ffffff;
+    --github-darker: #f6f8fa;
+    --github-border: #d0d7de;
+    --github-text: #57606a;
+    --github-fg: #24292f;
   }
 
   .dark {
@@ -169,6 +185,13 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* GitHub Tokens Dark Mode */
+    --github-background: #0d1117;
+    --github-darker: #010409;
+    --github-border: #30363d;
+    --github-text: #8b949e;
+    --github-fg: #ffffff;
   }
 }
 

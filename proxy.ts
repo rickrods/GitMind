@@ -1,9 +1,31 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+export async function proxy(request: NextRequest) {
+  return await updateSession(request);
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};
+
 export async function updateSession(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
+
   let supabaseResponse = NextResponse.next({
-    request,
+    request: {
+      headers: requestHeaders,
+    },
   });
 
   const supabase = createServerClient(
@@ -19,7 +41,9 @@ export async function updateSession(request: NextRequest) {
             request.cookies.set(name, value),
           );
           supabaseResponse = NextResponse.next({
-            request,
+            request: {
+              headers: requestHeaders,
+            },
           });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options),
@@ -41,12 +65,25 @@ export async function updateSession(request: NextRequest) {
   if (
     request.nextUrl.pathname !== "/" &&
     !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
+    !request.nextUrl.pathname.startsWith("/sign-in") &&
+    !request.nextUrl.pathname.startsWith("/sign-up") &&
     !request.nextUrl.pathname.startsWith("/auth")
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
+    url.pathname = "/sign-in";
+    return NextResponse.redirect(url);
+  }
+
+  // Redirect authenticated users to /dashboard if they are on / or auth pages
+  if (
+    user &&
+    (request.nextUrl.pathname === "/" ||
+      request.nextUrl.pathname.startsWith("/sign-in") ||
+      request.nextUrl.pathname.startsWith("/sign-up"))
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
