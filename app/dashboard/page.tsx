@@ -117,14 +117,14 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent CI Pipelines */}
         <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-github-text uppercase tracking-wider">Active Pipelines</h3>
+          <h3 className="text-sm font-semibold text-github-text uppercase tracking-wider"><a href="/ci">Active Pipelines</a></h3>
           <div className="bg-github-dark border border-github-border rounded-lg overflow-hidden min-h-[200px]">
             {loadingRuns ? (
               <div className="flex justify-center items-center h-48">
                 <div className="w-6 h-6 border-2 border-github-blue border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : workflows.length > 0 ? workflows.slice(0, 5).map((run) => (
-              <div key={run.id} className="p-4 border-b border-github-border last:border-0 hover:bg-white/5 transition-colors">
+              <a key={run.id} href={`/ci?runId=${run.id}`} className="block p-4 border-b border-github-border last:border-0 hover:bg-white/5 transition-colors cursor-pointer">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium text-github-fg truncate max-w-[150px]">{run.name}</span>
                   <div className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${run.conclusion === 'success' ? 'bg-github-green/20 text-github-green border border-github-green/40' :
@@ -139,7 +139,7 @@ const Dashboard: React.FC = () => {
                   <span>•</span>
                   <span>{new Date(run.created_at).toLocaleDateString()}</span>
                 </div>
-              </div>
+              </a>
             )) : (
               <div className="p-8 text-center text-xs text-github-text opacity-50">No recent pipelines found.</div>
             )}
@@ -155,7 +155,7 @@ const Dashboard: React.FC = () => {
                 <div className="w-6 h-6 border-2 border-github-purple border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : issues.length > 0 ? issues.slice(0, 5).map((issue) => (
-              <div key={issue.id} className="p-4 border-b border-github-border last:border-0 hover:bg-white/5 transition-colors">
+              <a key={issue.id} href={`/issues?issueNumber=${issue.number}`} className="block p-4 border-b border-github-border last:border-0 hover:bg-white/5 transition-colors cursor-pointer">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium text-github-fg truncate max-w-[150px]">#{issue.number}</span>
                   <div className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${issue.state === 'open' ? 'bg-github-green/20 text-github-green border border-github-green/40' :
@@ -168,7 +168,7 @@ const Dashboard: React.FC = () => {
                 <div className="text-xs text-github-text opacity-70">
                   {new Date(issue.created_at).toLocaleDateString()}
                 </div>
-              </div>
+              </a>
             )) : (
               <div className="p-8 text-center text-xs text-github-text opacity-50">No issues found.</div>
             )}
@@ -184,7 +184,7 @@ const Dashboard: React.FC = () => {
                 <div className="w-6 h-6 border-2 border-github-green border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : pullRequests.length > 0 ? pullRequests.slice(0, 5).map((pr) => (
-              <div key={pr.id} className="p-4 border-b border-github-border last:border-0 hover:bg-white/5 transition-colors">
+              <a key={pr.id} href={`/pulls?prNumber=${pr.number}`} className="block p-4 border-b border-github-border last:border-0 hover:bg-white/5 transition-colors cursor-pointer">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium text-github-fg truncate max-w-[150px]">#{pr.number}</span>
                   <div className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${pr.state === 'open' ? 'bg-github-green/20 text-github-green border border-github-green/40' :
@@ -198,7 +198,7 @@ const Dashboard: React.FC = () => {
                 <div className="text-xs text-github-text opacity-70">
                   {new Date(pr.created_at).toLocaleDateString()}
                 </div>
-              </div>
+              </a>
             )) : (
               <div className="p-8 text-center text-xs text-github-text opacity-50">No pull requests found.</div>
             )}

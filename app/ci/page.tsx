@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { WorkflowRun, AIProposal } from '../../types';
 import { useRepo } from '@/components/providers/RepoContext';
 import { analyzeWorkflowAction, applyFixAction, getCIAnalyses } from '@/app/actions/actions';
@@ -9,6 +10,7 @@ import { toast } from 'react-hot-toast';
 
 export default function CIConfig() {
   const { currentRepo, githubService } = useRepo();
+  const searchParams = useSearchParams();
   const [workflows, setWorkflows] = useState<WorkflowRun[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -47,6 +49,22 @@ export default function CIConfig() {
           });
 
           setWorkflows(mergedWorkflows);
+
+          // Auto-select workflow if runId is in query params
+          const runIdParam = searchParams.get('runId');
+          if (runIdParam) {
+            const runId = Number(runIdParam);
+            const targetRun = mergedWorkflows.find(run => run.id === runId);
+            if (targetRun && targetRun.aiAnalysis) {
+              setAnalysisResult({
+                runId: targetRun.id,
+                analysis: targetRun.aiAnalysis,
+                suggestedFix: targetRun.suggestedFix || '',
+                shouldProposeFix: !!targetRun.aiProposal,
+                fix: targetRun.aiProposal
+              });
+            }
+          }
         } catch (e) {
           console.error(e);
         } finally {
@@ -57,7 +75,7 @@ export default function CIConfig() {
       }
     };
     fetch();
-  }, [currentRepo, githubService]);
+  }, [currentRepo, githubService, searchParams]);
 
   const handleAnalyze = async (run: WorkflowRun) => {
     if (!currentRepo) return;

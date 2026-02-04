@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { analyzeIssue } from '@/app/actions/gemini';
 import { saveIssueAnalysis, getIssueAnalyses, applyFixAction } from '@/app/actions/actions';
 import { GitHubIssue, AIProposal } from '@/types';
@@ -9,6 +10,7 @@ import { useRepo } from '@/components/providers/RepoContext';
 
 export default function Issues() {
   const { currentRepo, githubService, geminiApiKey, geminiModel, token, setError } = useRepo();
+  const searchParams = useSearchParams();
   const [issues, setIssues] = useState<GitHubIssue[]>([]);
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState<number | null>(null);
@@ -50,7 +52,18 @@ export default function Issues() {
           });
 
           setIssues(mergedIssues);
-          setSelectedIssue(null);
+
+          // Auto-select issue if issueNumber is in query params
+          const issueNumberParam = searchParams.get('issueNumber');
+          if (issueNumberParam) {
+            const issueNumber = Number(issueNumberParam);
+            const targetIssue = mergedIssues.find(issue => issue.number === issueNumber);
+            if (targetIssue) {
+              setSelectedIssue(targetIssue);
+            }
+          } else {
+            setSelectedIssue(null);
+          }
         } catch (e) {
           console.error(e);
         } finally {
@@ -61,7 +74,7 @@ export default function Issues() {
       }
     };
     fetch();
-  }, [currentRepo, githubService]);
+  }, [currentRepo, githubService, searchParams]);
 
   const handleAnalyze = async (issue: GitHubIssue, feedback?: string) => {
     if (!geminiApiKey || !currentRepo || !githubService) {

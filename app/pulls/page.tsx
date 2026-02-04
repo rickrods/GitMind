@@ -2,12 +2,14 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { analyzePullRequestAction, getPRAnalyses, applyFixAction } from '@/app/actions/actions';
 import { PullRequest, AIProposal } from '@/types'; // Import AIProposal
 import { useRepo } from '@/components/providers/RepoContext';
 
 export default function PullRequests() {
   const { currentRepo, githubService, geminiApiKey, geminiModel, token, setError } = useRepo(); // Added token
+  const searchParams = useSearchParams();
   const [prs, setPrs] = useState<PullRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [reviewing, setReviewing] = useState<number | null>(null);
@@ -45,7 +47,18 @@ export default function PullRequests() {
           });
 
           setPrs(mergedPrs);
-          setSelectedPr(null);
+
+          // Auto-select PR if prNumber is in query params
+          const prNumberParam = searchParams.get('prNumber');
+          if (prNumberParam) {
+            const prNumber = Number(prNumberParam);
+            const targetPr = mergedPrs.find(pr => pr.number === prNumber);
+            if (targetPr) {
+              setSelectedPr(targetPr);
+            }
+          } else {
+            setSelectedPr(null);
+          }
         } catch (e) {
           console.error(e);
         } finally {
@@ -57,7 +70,7 @@ export default function PullRequests() {
       }
     };
     fetch();
-  }, [currentRepo, githubService]);
+  }, [currentRepo, githubService, searchParams]);
 
   const handleReview = async (pr: PullRequest) => {
     if (!githubService || !currentRepo) return;
