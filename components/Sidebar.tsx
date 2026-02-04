@@ -46,8 +46,7 @@ const Sidebar = async () => {
           );
         })}
       </nav>
-
-      <SidebarFooter initialUser={user} />
+        <SidebarFooter initialUser={user} />
     </div>
   );
 };

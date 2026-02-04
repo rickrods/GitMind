@@ -22,17 +22,26 @@ export default function SidebarFooter({ initialUser }: { initialUser: User | nul
                     <button onClick={clearError} className="absolute top-1 right-1 hover:text-white">x</button>
                 </div>
             )}
-            <div className="flex items-center justify-between">
+            {/* Theme Toggel */}
+            <div className="flex items-center justify-center">
                 <ThemeToggleButton />
-                {user && <span className="text-[10px] text-github-text truncate max-w-[100px]">{user.email}</span>}
             </div>
-            {user ? (
-                <AuthPageSignOutButton />
-            ) : (
-                <Button asChild className="w-full">
-                    <Link href="/sign-in">Sign in</Link>
-                </Button>
-            )}
+
+            {/* Users Info */}
+            <div className="flex items-center justify-center text-center  gap-2">
+                {user && <span className="text-[10px] github-text truncate max-w-[150px]">{user.email}</span>}
+            </div>
+
+            {/* Sign In / Out button */}
+            <div className="flex items-center justify-center text-center  gap-2">
+                {user ? (
+                    <AuthPageSignOutButton />
+                ) : (
+                    <Button asChild className="w-full">
+                        <Link href="/sign-in">Sign in</Link>
+                    </Button>
+                )}
+            </div>
         </div>
     );
 }
