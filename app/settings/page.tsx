@@ -21,6 +21,12 @@ export default function SettingsPage() {
   const [isAddingRepo, setIsAddingRepo] = useState(false);
   const [isSavingToken, setIsSavingToken] = useState(false);
   const [isSavingGeminiKey, setIsSavingGeminiKey] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch for theme
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
 
   // Effect to update local model state from DB
@@ -131,7 +137,7 @@ export default function SettingsPage() {
                   value={newRepoUrl}
                   onChange={(e) => setNewRepoUrl(e.target.value)}
                   placeholder="https://github.com/owner/repo"
-                  className="flex-1 bg-github-darker border border-github-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-github-blue outline-none text-white"
+                  className="flex-1 bg-github-darker border border-github-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-github-blue outline-none text-github-fg"
                   autoComplete="off"
                 />
                 <button
@@ -156,7 +162,7 @@ export default function SettingsPage() {
                   value={newToken}
                   onChange={(e) => setNewToken(e.target.value)}
                   placeholder={token ? "Token is configured (ghp_...)" : "ghp_..."}
-                  className="flex-1 bg-github-darker border border-github-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-github-blue outline-none text-white"
+                  className="flex-1 bg-github-darker border border-github-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-github-blue outline-none text-github-fg"
                 />
                 <button
                   onClick={handleSaveToken}
@@ -189,7 +195,7 @@ export default function SettingsPage() {
                   value={newGeminiApiKey}
                   onChange={(e) => setNewGeminiApiKey(e.target.value)}
                   placeholder={geminiApiKey ? "API Key is set" : "Enter Gemini API Key"}
-                  className="flex-1 bg-github-darker border border-github-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-github-purple outline-none text-white"
+                  className="flex-1 bg-github-darker border border-github-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-github-purple outline-none text-github-fg"
                 />
                 <button
                   onClick={handleSaveGeminiApiKey}
@@ -232,14 +238,18 @@ export default function SettingsPage() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setTheme("light")}
-                className={`px-4 py-2 rounded-lg border ${theme === "light" ? "border-github-blue bg-github-border text-github-text" : "border-github-border text-github-text opacity-50"
+                className={`px-4 py-2 rounded-lg border ${mounted && theme === "light"
+                    ? "border-github-blue bg-github-border text-github-fg"
+                    : "border-github-border text-github-text opacity-50"
                   }`}
               >
                 Light Mode
               </button>
               <button
                 onClick={() => setTheme("dark")}
-                className={`px-4 py-2 rounded-lg border ${theme === "dark" ? "border-github-blue bg-github-border text-github-fg" : "border-github-border text-github-text"
+                className={`px-4 py-2 rounded-lg border ${mounted && theme === "dark"
+                    ? "border-github-blue bg-github-border text-github-fg"
+                    : "border-github-border text-github-text"
                   }`}
               >
                 Dark Mode
