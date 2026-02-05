@@ -1,6 +1,7 @@
 
 import { headers } from 'next/headers';
 import { createSupabaseClient } from '@/lib/supabase/server';
+import Link from 'next/link';
 import SidebarFooter from "./SidebarFooter";
 
 const Sidebar = async () => {

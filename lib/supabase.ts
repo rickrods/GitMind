@@ -30,7 +30,7 @@ export const getSession = async () => {
  * Fetches all repositories for a user from the database.
  * @param userId User ID
  */
-export const getUserRepositories = async (supabase: SupabaseClient, userId: string): Promise<Repository[]> => {
+export const getUserRepositories = async (supabase: SupabaseClient, userId: string): Promise<(Repository & { is_current: boolean })[]> => {
   const { data: repos, error } = await supabase
     .from('user_repositories')
     .select('*')
@@ -58,6 +58,7 @@ export const getUserRepositories = async (supabase: SupabaseClient, userId: stri
     stargazers_count: r.stargazers_count,
     default_branch: r.default_branch,
     updated_at: r.last_synced_at,
+    is_current: r.is_current,
     // Add other required fields with defaults or mapping as needed
     private: false,
     fork: false,
@@ -68,7 +69,7 @@ export const getUserRepositories = async (supabase: SupabaseClient, userId: stri
     forks_count: 0,
     open_issues_count: 0,
     homepage: null
-  } as unknown as Repository));
+  } as unknown as (Repository & { is_current: boolean })));
 };
 
 /**

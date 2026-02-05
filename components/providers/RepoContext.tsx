@@ -116,16 +116,11 @@ export const RepoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const mappedRepos = await getUserRepositories(supabase, userId);
       setRepositories(mappedRepos);
 
-      // Determine current repo (logic could also be in lib, but fine here)
-      // Note: getUserRepositories doesn't return 'is_current' explicitly in Repository type
-      // but we can infer or fetch it. However, the previous logic mapped it.
-      // Since mappedRepos is now just Repository[], we need to rely on the fact that
-      // we might want to store 'is_current' in the state or fetching logic.
-      // For now, let's just pick the first one if we can't tell, or improve getUserRepositories.
-      // actually, let's just pick the first one for now as the type doesn't have is_current.
-      if (mappedRepos.length > 0) {
-        // If we want to persist which one was current, we might need that info.
-        // For now, default to first.
+      // Determine current repo by checking the is_current flag
+      const savedCurrentRepo = mappedRepos.find(r => r.is_current);
+      if (savedCurrentRepo) {
+        setCurrentRepoState(savedCurrentRepo);
+      } else if (mappedRepos.length > 0) {
         setCurrentRepoState(mappedRepos[0]);
       } else {
         setCurrentRepoState(null);

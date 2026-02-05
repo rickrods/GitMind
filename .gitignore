@@ -16,7 +16,7 @@
 # next.jsnpm 
 /.next/
 /out/
-package-lock.json
+#package-lock.json
 
 # production
 /build
@@ -46,6 +46,3 @@ next-env.d.ts
 
 # Gemini
 Gemini.md
-
-# Migrations
-/supabase/*

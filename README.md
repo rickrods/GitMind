@@ -57,7 +57,14 @@ ENCRYPTION_KEY=your_base64_encryption_key # 32 bytes base64 encoded
 > [!IMPORTANT]
 > The `ENCRYPTION_KEY` is critical for securing your GitHub and Gemini secrets. Use a strong, unique key.
 
-### 4. Run the dev server
+### 4. Database Setup
+
+1. Go to your [Supabase Project Dashboard](https://supabase.com/dashboard).
+2. Navigate to the **SQL Editor** in the left sidebar.
+3. Create a new query and paste the contents of `supabase/setup.sql`.
+4. Run the query to set up the tables, RLS policies, and triggers.
+
+### 5. Run the dev server
 
 ```bash
 npm run dev
