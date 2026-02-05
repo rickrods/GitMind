@@ -55,8 +55,10 @@ ENCRYPTION_KEY=your_base64_encryption_key # 32 bytes base64 encoded
 ```
 
 > [!IMPORTANT]
-> The `ENCRYPTION_KEY` is critical for securing your GitHub and Gemini secrets. Use a strong, unique key.
-
+> The `ENCRYPTION_KEY` is critical for securing your GitHub and Gemini secrets. Use a strong, unique key. To generate a new key in linux
+```bash
+openssl rand -hex 16
+```
 ### 4. Database Setup
 
 1. Go to your [Supabase Project Dashboard](https://supabase.com/dashboard).
@@ -87,7 +89,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 ## 🤝 Support
 
 - 🐛 Found a bug? [Open an issue](https://github.com/rickrods/GitMind/issues)
+- 📚 [Gitmind Documentation](https://github.com/rickrods/GitMind/blob/main/Documentation/generateDoc.md)
 - 📚 [Next.js Documentation](https://nextjs.org/docs)
+- 📚 [Supabase Documentation](https://supabase.com/docs)
 
 ---
 
