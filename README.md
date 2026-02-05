@@ -61,7 +61,6 @@ graph TD
 
 <h3 align="left"><a href="https://git-mind-delta.vercel.app/">✨ Live Demo ✨</a></h3>
 
----
 
 ## 🛠️ Local Setup
 
