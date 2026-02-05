@@ -23,6 +23,35 @@ This document provides comprehensive technical documentation for **GitMind**, an
 
 GitMind is built as a full-stack Next.js application, leveraging server-side rendering and API routes to orchestrate interactions between GitHub, Google Gemini, and Supabase. The architecture emphasizes modularity, security, and scalability.
 
+```mermaid
+graph TD
+    subgraph Client
+        User((User))
+        Frontend[Next.js Frontend]
+    end
+
+    subgraph Server [Next.js Server]
+        API[API Routes]
+        Octokit[Octokit Client]
+    end
+
+    subgraph Infrastructure
+        Supabase[(Supabase\nAuth & DB)]
+        Gemini[Google Gemini API]
+        GitHub[GitHub API]
+    end
+
+    User -->|Browser| Frontend
+    Frontend -->|HTTP Requests| API
+    
+    API -->|Auth & Encrypted Keys| Supabase
+    API -->|Repo Operations| Octokit
+    Octokit <-->|REST/GraphQL| GitHub
+    
+    API -->|Context & Prompts| Gemini
+    Gemini -->|Analysis & Code| API
+```
+
 **Core Components:**
 
 *   **Frontend (Next.js & UI Frameworks):**

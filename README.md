@@ -24,10 +24,44 @@
 - 🧐 **Code Review** — Rigorous PR reviews with quality scoring, logic checks, and best practice alignment.
 
 ---
-## 🚀 Try it out
 
-[**https://git-mind-delta.vercel.app**](https://git-mind-delta.vercel.app/)
+## 🏗️ Architecture
 
+```mermaid
+graph TD
+    subgraph Client
+        User((User))
+        Frontend[Next.js Frontend]
+    end
+
+    subgraph Server [Next.js Server]
+        API[API Routes]
+        Octokit[Octokit Client]
+    end
+
+    subgraph Infrastructure
+        Supabase[(Supabase\nAuth & DB)]
+        Gemini[Google Gemini API]
+        GitHub[GitHub API]
+    end
+
+    User -->|Browser| Frontend
+    Frontend -->|HTTP Requests| API
+    
+    API -->|Auth & Encrypted Keys| Supabase
+    API -->|Repo Operations| Octokit
+    Octokit <-->|REST/GraphQL| GitHub
+    
+    API -->|Context & Prompts| Gemini
+    Gemini -->|Analysis & Code| API
+```
+
+---
+## 🚀 Try it out 
+
+<h3 align="left"><a href="https://git-mind-delta.vercel.app/">✨ Live Demo ✨</a></h3>
+
+---
 
 ## 🛠️ Local Setup
 
@@ -89,17 +123,12 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 ## 🤝 Support
 
 - 🐛 Found a bug? [Open an issue](https://github.com/rickrods/GitMind/issues)
-- 📚 [Gitmind Documentation](https://github.com/rickrods/GitMind/blob/main/Documentation/generateDoc.md)
+- <img src="app/public/gitMind.jpg" width="20" height="20" /> [Gitmind Documentation](https://github.com/rickrods/GitMind/blob/main/Documentation/generateDoc.md)
 - 📚 [Next.js Documentation](https://nextjs.org/docs)
 - 📚 [Supabase Documentation](https://supabase.com/docs)
 
 ---
 
-## 🚀 Try it out
-
-[**https://git-mind-delta.vercel.app**](https://git-mind-delta.vercel.app/)
-
-
 ## 📄 License
-
-MIT
+<h4 align="left"><a href="/LICENSE.md"> MIT</a></h4>
+---
