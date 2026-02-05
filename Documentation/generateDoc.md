@@ -4,22 +4,36 @@ This document provides comprehensive technical documentation for **GitMind**, an
 
 ## Table of Contents
 
-1.  [System Architecture Overview](#1-system-architecture-overview)
-2.  [Getting Started Guide](#2-getting-started-guide)
+1.  [Problem Statement](#1-problem-statement)
+2.  [System Architecture Overview](#2-system-architecture-overview)
+3.  [Getting Started Guide](#3-getting-started-guide)
     *   [Prerequisites](#prerequisites)
     *   [Local Setup](#local-setup)
     *   [Supabase Configuration](#supabase-configuration)
     *   [Generating an Encryption Key](#generating-an-encryption-key)
     *   [Running the Development Server](#running-the-development-server)
-3.  [API Reference (Internal Integrations)](#3-api-reference-internal-integrations)
+4.  [API Reference (Internal Integrations)](#4-api-reference-internal-integrations)
     *   [GitHub API (via Octokit)](#github-api-via-octokit)
     *   [Google Gemini API](#google-gemini-api)
     *   [Supabase API](#supabase-api)
-4.  [Future Roadmap](#4-future-roadmap)
+5.  [Future Roadmap](#5-future-roadmap)
+
+**Public Project Link:** [git-mind-delta.vercel.app](https://git-mind-delta.vercel.app/)
+**Public Code Repository:** [github.com/rickrods/GitMind](https://github.com/rickrods/GitMind)
 
 ---
 
-## 1. System Architecture Overview
+## 1. Problem Statement
+
+Modern software development involves managing complex codebases, high volumes of issues, and intricate CI/CD pipelines. Developers and maintainers face significant challenges:
+
+*   **Information Overload:** Sifting through hundreds of issues to identify critical bugs versus feature requests.
+*   **Context Switching:** Constantly moving between IDEs, GitHub, and logs breaks flow.
+*   **Repetitive Tasks:** Manually triaging issues, writing boilerplate documentation, and analyzing standard CI failures consumes valuable time.
+
+GitMind addresses these by acting as an intelligent layer between the developer and the repository, leveraging Large Language Models to automate understanding and action.
+
+## 2. System Architecture Overview
 
 GitMind is built as a full-stack Next.js application, leveraging server-side rendering and API routes to orchestrate interactions between GitHub, Google Gemini, and Supabase. The architecture emphasizes modularity, security, and scalability.
 
@@ -97,7 +111,7 @@ graph TD
 *   **Server-Side Processing:** AI interactions and GitHub API calls are handled server-side, minimizing exposure of sensitive data on the client.
 *   **Strict Access Control:** Supabase's built-in authentication and Row Level Security (RLS) can be configured to ensure users only access their own encrypted credentials.
 
-## 2. Getting Started Guide
+## 3. Getting Started Guide
 
 This guide will walk you through setting up GitMind for local development.
 
@@ -175,7 +189,7 @@ npm run dev
 
 Open your web browser and navigate to [http://localhost:3000](http://localhost:3000) to view the GitMind application.
 
-## 3. API Reference (Internal Integrations)
+## 4. API Reference (Internal Integrations)
 
 GitMind does not expose a public API for external consumption. Instead, it acts as a client to several powerful third-party APIs to deliver its features. This section details how GitMind internally utilizes these integrations.
 
@@ -200,6 +214,16 @@ GitMind leverages the GitHub API, primarily through the Octokit library, to perf
 ### Google Gemini API
 
 The Google Gemini API is the backbone of GitMind's intelligent features. GitMind interacts with Gemini's models (Flash and Pro) to process information and generate insights.
+
+**Gemini 3 Integration & Capabilities:**
+
+GitMind leverages the cutting-edge capabilities of Gemini 3 to redefine the developer experience. At its core, the application utilizes **Long Context Windows**—processing up to 100k+ tokens of codebase structure, diffs, and logs—to provide deep technical insights that were previously impossible.
+
+We've implemented **Structured JSON Output** with strict **Response Schemas** throughout the stack, enabling Gemini to act as a reliable "AI Architect." This allows the system to not only analyze problems but to generate concrete, high-confidence **AI Proposals**. These proposals include full-file rewrites, branch names, and conventional commit messages, which are then automatically applied via our GitHub Service integration.
+
+Beyond text, GitMind leverages Gemini's **Multimodal Capabilities** to analyze screenshots, UI mocks, and diagrams attached to GitHub issues and Pull Request comments. By "seeing" the visual context of a bug or feature request, the AI can cross-reference visual regressions with code changes, ensuring a comprehensive analysis that text-based triage would otherwise miss.
+
+Crucially, we utilize Gemini's **Thinking Mode** (via `thinkingConfig`) for rigorous code reviews and CI failure analysis. By allowing the model to engage in extended reasoning before responding, it identifies subtle logic errors and security vulnerabilities that standard LLMs often miss. Whether it's triaging vague issues, processing complex build failures, or interpreting visual feedback, Gemini is the heartbeat of GitMind, transforming a static dashboard into an autonomous maintainer.
 
 **Key Operations Performed:**
 
@@ -229,7 +253,7 @@ Supabase provides the backend infrastructure for GitMind, handling database inte
     *   Leveraging Supabase's Row Level Security (RLS) to ensure that users can only access their own encrypted credentials and data.
     *   Utilizing Supabase's secure data storage for encrypted secrets.
 
-## 4. Future Roadmap
+## 5. Future Roadmap
 
 GitMind is continuously evolving, with numerous possibilities for enhancing its intelligence and utility. The following outlines potential areas for future development:
 

@@ -11,6 +11,7 @@
   <a href="#support"><strong>Support</strong></a>
 </p>
 
+
 ---
 
 ## ⚡ Features
@@ -61,6 +62,7 @@ graph TD
 
 <h3 align="left"><a href="https://git-mind-delta.vercel.app/">✨ Live Demo ✨</a></h3>
 
+---
 
 ## 🛠️ Local Setup
 
@@ -123,11 +125,16 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 
 - 🐛 Found a bug? [Open an issue](https://github.com/rickrods/GitMind/issues)
 - <img src="app/public/gitMind.jpg" width="20" height="20" /> [Gitmind Documentation](https://github.com/rickrods/GitMind/blob/main/Documentation/generateDoc.md)
-- 📚 [Next.js Documentation](https://nextjs.org/docs)
-- 📚 [Supabase Documentation](https://supabase.com/docs)
 
 ---
 
+# 🌐 Public Project Link
+[git-mind-delta.vercel.app](https://git-mind-delta.vercel.app/)
+
+# 💻 Public Code Repository
+[github.com/rickrods/GitMind](https://github.com/rickrods/GitMind)
+
+---
 ## 📄 License
 <h4 align="left"><a href="/LICENSE.md"> MIT</a></h4>
 ---
