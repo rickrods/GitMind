@@ -34,7 +34,7 @@ export default async function SignUp(props: {
           placeholder="Your password"
           required
         />
-        <AuthSubmitButton />
+        <AuthSubmitButton>Sign up</AuthSubmitButton>
         <FormMessage message={searchParams} />
       </div>
     </form>
