@@ -134,7 +134,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 # 💻 Public Code Repository
 [github.com/rickrods/GitMind](https://github.com/rickrods/GitMind)
 
+# 💻 Demo Video
+[Demo Video](https://youtu.be/_s2fO8CGDaw)
 ---
+
 ## 📄 License
 <h4 align="left"><a href="/LICENSE.md"> MIT</a></h4>
 ---

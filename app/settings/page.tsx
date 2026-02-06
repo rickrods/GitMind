@@ -38,12 +38,7 @@ export default function SettingsPage() {
     fetchModel();
   }, [getGeminiModel]);
 
-  // Effect to populate repo url
-  useEffect(() => {
-    if (currentRepo?.html_url) {
-      setNewRepoUrl(currentRepo.html_url);
-    }
-  }, [currentRepo]);
+
 
   const handleSaveToken = async () => {
     if (newToken.trim()) {
@@ -124,6 +119,12 @@ export default function SettingsPage() {
             <Shield size={20} className="text-github-blue" /> GitHub Config
           </h2>
 
+          {/* Hidden inputs to prevent browser autofill heuristics (Username+Password) */}
+          <div className="hidden">
+            <input type="text" autoComplete="username" />
+            <input type="password" autoComplete="current-password" />
+          </div>
+
           <div className="space-y-6">
             {/* GitHub Repository */}
             <div className="space-y-2">
@@ -145,7 +146,7 @@ export default function SettingsPage() {
                   disabled={isAddingRepo || loading}
                   className="px-4 py-2 bg-github-blue hover:bg-opacity-90 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
                 >
-                  {isAddingRepo || loading ? "Adding..." : "Add"}
+                  {isAddingRepo ? "Adding..." : "Add"}
                 </button>
               </div>
             </div>

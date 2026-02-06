@@ -217,6 +217,7 @@ export async function saveCIAnalysis(
       run_id: runId,
       analysis,
       suggested_fix: suggestedFix,
+      needs_info: false,
       ai_proposal: aiProposal,
       updated_at: new Date().toISOString()
     }, { onConflict: 'repo_owner,repo_name,run_id' });
@@ -283,7 +284,6 @@ export async function getRepoDocumentation(repoOwner: string, repoName: string) 
   return data.content;
 }
 
-// CI Analysis Actions
 // CI & PR Analysis Actions
 import { analyzeWorkflowFailure, reviewPullRequest } from "@/app/actions/gemini";
 import { GitHubService } from "@/utils/github";
@@ -402,6 +402,17 @@ export async function analyzeWorkflowAction(owner: string, repo: string, runId: 
   }
 
   return result;
+}
+
+export async function submitPullRequestReviewAction(owner: string, repo: string, prNumber: number, body: string, event: 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT') {
+  const user = await getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const settings = await getProfileSettings();
+  if (!settings?.github_pat) throw new Error("GitHub PAT missing.");
+
+  const gh = new GitHubService(settings.github_pat);
+  return await gh.submitPullRequestReview(owner, repo, prNumber, body, event);
 }
 
 export async function applyFixAction(repo: Repository, proposal: AIProposal) {

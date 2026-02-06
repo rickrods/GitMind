@@ -248,6 +248,19 @@ export class GitHubService {
         return res.json();
     }
 
+    async submitPullRequestReview(owner: string, repo: string, prNumber: number, body: string, event: 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT'): Promise<any> {
+        const res = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/pulls/${prNumber}/reviews`, {
+            method: 'POST',
+            headers: this.headers,
+            body: JSON.stringify({
+                body,
+                event
+            })
+        });
+        if (!res.ok) throw new Error(`Failed to submit PR review: ${await res.text()}`);
+        return res.json();
+    }
+
     async fetchIssueComments(owner: string, repo: string, issueNumber: number): Promise<any[]> {
         const res = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/issues/${issueNumber}/comments`, {
             headers: this.headers

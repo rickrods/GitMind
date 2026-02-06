@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { analyzePullRequestAction, getPRAnalyses, applyFixAction } from '@/app/actions/actions';
+import { analyzePullRequestAction, getPRAnalyses, applyFixAction, submitPullRequestReviewAction } from '@/app/actions/actions';
 import { PullRequest, AIProposal } from '@/types'; // Import AIProposal
 import { useRepo } from '@/components/providers/RepoContext';
 
@@ -13,6 +13,7 @@ export default function PullRequests() {
   const [prs, setPrs] = useState<PullRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [reviewing, setReviewing] = useState<number | null>(null);
+  const [approving, setApproving] = useState<number | null>(null);
   const [selectedPr, setSelectedPr] = useState<PullRequest | null>(null);
 
   // State for AI Proposal
@@ -144,6 +145,37 @@ export default function PullRequests() {
     }
   };
 
+  const handleReviewSubmission = async (pr: PullRequest) => {
+    if (!currentRepo || !pr.aiReview) return;
+    setApproving(pr.id);
+    try {
+      await submitPullRequestReviewAction(
+        currentRepo.owner.login,
+        currentRepo.name,
+        pr.number,
+        pr.aiReview.feedback,
+        pr.aiReview.status.toUpperCase() as 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT'
+      );
+      // Refresh PRs to update state
+      const prData = await githubService.fetchPullRequests(currentRepo.owner.login, currentRepo.name);
+      // Re-merge with existing analyses (simplified for brevity, should ideally refetch analyses too)
+      setPrs(prev => prev.map(p => p.id === pr.id ? { ...p, state: 'closed' } : p)); // Optimistic or refetch
+      const [newPrData, analysesData] = await Promise.all([
+        githubService.fetchPullRequests(currentRepo.owner.login, currentRepo.name),
+        getPRAnalyses(currentRepo.owner.login, currentRepo.name)
+      ]);
+      setPrs(newPrData.map(p => {
+        const analysis = analysesData.find((a: any) => a.pr_number === p.number);
+        return analysis ? { ...p, aiReview: analysis.analysis, aiProposal: analysis.ai_proposal } : p;
+      }));
+    } catch (error) {
+      console.error("Submission failed", error);
+      setError("Review submission failed. Check your permissions.");
+    } finally {
+      setApproving(null);
+    }
+  };
+
 
   if (!currentRepo) return <div className="p-8 text-github-text">Please select a repository.</div>;
 
@@ -183,36 +215,55 @@ export default function PullRequests() {
                 <span className="font-mono text-xs bg-github-border px-2 py-1 rounded text-github-text truncate max-w-[100px]">{pr.base.ref}</span>
               </div>
 
-              <div className="flex items-center justify-between mt-4">
-                <div className="flex items-center gap-2">
-                  <img src={pr.user.avatar_url} className="w-5 h-5 rounded-full" alt="User" />
-                  <span className="text-xs text-github-text">{pr.user.login}</span>
-                </div>
+                                                        <div className="flex items-center justify-between mt-4">
 
-                {pr.aiReview ? (
-                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border font-bold text-xs uppercase ${pr.aiReview.status === 'approve' ? 'bg-github-green/20 text-github-green border-github-green/40' :
-                    pr.aiReview.status === 'request_changes' ? 'bg-github-red/20 text-github-red border-github-red/40' :
-                      'bg-github-border text-github-text'
-                    }`}>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {pr.aiReview.status === 'approve' ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      )}
-                    </svg>
-                    {pr.aiReview.status.replace('_', ' ')}
-                  </div>
-                ) : (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleReview(pr); }}
-                    disabled={reviewing === pr.id}
-                    className="text-xs px-3 py-1.5 bg-github-purple text-white rounded-md font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {reviewing === pr.id ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : 'Run AI Review'}
-                  </button>
-                )}
-              </div>
+                                                          <div className="flex items-center gap-2">
+
+                                                            <img src={pr.user.avatar_url} className="w-5 h-5 rounded-full" alt="User" />
+
+                                                            <span className="text-xs text-github-text">{pr.user.login}</span>
+
+                                                          </div>
+
+                            
+
+                                                          <div className="flex gap-2">
+
+                                                            <button
+
+                                                              onClick={(e) => { e.stopPropagation(); handleReview(pr); }}
+
+                                                              disabled={reviewing === pr.id}
+
+                                                              className="text-[10px] flex items-center gap-1 px-2 py-1 bg-github-purple/20 text-github-purple border border-github-purple/30 rounded hover:bg-github-purple hover:text-white transition-all disabled:opacity-50"
+
+                                                            >
+
+                                                              {reviewing === pr.id ? (
+
+                                                                <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+
+                                                              ) : (
+
+                                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+
+                                                                </svg>
+
+                                                              )}
+
+                                                              {pr.aiReview ? 'Re-Analyze' : 'AI Analysis'}
+
+                                                            </button>
+
+                                                          </div>
+
+                                                        </div>
+
+                            
+
+              
             </div>
           )) : (
             <div className="p-12 text-center bg-github-dark border border-github-border rounded-xl text-github-text opacity-50">
@@ -263,16 +314,47 @@ export default function PullRequests() {
                     </div>
 
                     {selectedPr.aiReview.shouldProposeFix && (
-                      <button
-                        onClick={() => {
-                          setProposalDetails(selectedPr.aiProposal || null);
-                          setShowProposalModal(true);
-                        }}
-                        className="mt-4 w-full px-4 py-2 bg-github-blue text-white rounded-md font-semibold hover:bg-opacity-90 flex items-center justify-center gap-2"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                        Propose AI Fix
-                      </button>
+                      <div className="flex gap-3 mt-4">
+                        <button
+                          onClick={() => {
+                            setProposalDetails(selectedPr.aiProposal || null);
+                            setShowProposalModal(true);
+                          }}
+                          className="flex-1 px-4 py-2 bg-github-blue text-white rounded-md font-semibold hover:bg-opacity-90 flex items-center justify-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                          Propose AI Fix
+                        </button>
+                        <button
+                          onClick={() => handleReviewSubmission(selectedPr)}
+                          disabled={selectedPr.aiReview.status !== 'approve' || approving === selectedPr.id}
+                          className={`flex-1 px-4 py-2 text-white rounded-md font-semibold hover:bg-opacity-90 flex items-center justify-center gap-2 disabled:opacity-50 ${selectedPr.aiReview.status === 'approve' ? 'bg-github-green' : 'bg-github-border'}`}
+                        >
+                          {approving === selectedPr.id ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                          )}
+                          Approve on GitHub
+                        </button>
+                      </div>
+                    )}
+
+                    {!selectedPr.aiReview.shouldProposeFix && (
+                      <div className="mt-4">
+                        <button
+                          onClick={() => handleReviewSubmission(selectedPr)}
+                          disabled={selectedPr.aiReview.status !== 'approve' || approving === selectedPr.id}
+                          className={`w-full px-4 py-2 text-white rounded-md font-semibold hover:bg-opacity-90 flex items-center justify-center gap-2 disabled:opacity-50 ${selectedPr.aiReview.status === 'approve' ? 'bg-github-green' : 'bg-github-border'}`}
+                        >
+                          {approving === selectedPr.id ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                          )}
+                          Approve on GitHub
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
