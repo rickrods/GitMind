@@ -22,6 +22,9 @@ export const signUpAction = async (formData: FormData) => {
   });
 
   if (error) {
+    if (error.status === 429 || error.message.toLowerCase().includes("rate limit")) {
+      return encodedRedirect("error", "/sign-up", "Rate limit exceeded. Please try again in an hour.");
+    }
     return encodedRedirect("error", "/sign-up", error.message);
   }
 
