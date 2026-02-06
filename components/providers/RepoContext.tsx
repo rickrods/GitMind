@@ -8,9 +8,6 @@ import { User } from '@supabase/supabase-js';
 import { getProfileSettings, saveEncryptedSecret, saveProfileSetting } from '@/app/actions/actions';
 import { createSupabaseClient } from '@/lib/supabase/client';
 import {
-  subscribeToAuthChanges,
-  supabase,
-  getSession,
   getUserRepositories,
   insertUserRepository,
   deleteUserRepository,
@@ -43,7 +40,10 @@ interface RepoContextType {
 const RepoContext = createContext<RepoContextType | undefined>(undefined);
 // const supabase = createSupabaseClient() as SupabaseClient;
 
-export const RepoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const RepoProvider = ({ children }: { children: ReactNode }) => {
+  // Create a single supabase client for this provider instance
+  const [supabase] = useState(() => createSupabaseClient());
+
   const [token, setTokenState] = useState<string | null>(null);
   const [geminiApiKey, setGeminiApiKeyState] = useState<string | null>(null);
   const [geminiModel, setGeminiModelState] = useState<string | null>(null);
@@ -56,16 +56,15 @@ export const RepoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Initial session check and auth listener
   useEffect(() => {
     const init = async () => {
-      const supabase = createSupabaseClient();
       try {
-        const session = await getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
 
         const initialUser = session?.user || null;
         console.log("RepoContext: Initial session check, user found:", initialUser?.id);
         setUser(initialUser);
 
         if (initialUser) {
-          const supabase = createSupabaseClient();
           await fetchUserData(initialUser.id, supabase);
         } else {
           setLoading(false);
@@ -75,13 +74,12 @@ export const RepoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setLoading(false);
       }
 
-      const subscription = subscribeToAuthChanges(async (event, session) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         console.log("RepoContext: Auth event:", event, "User:", session?.user?.id);
         const currentUser = session?.user || null;
         setUser(currentUser);
 
         if (currentUser && event === 'SIGNED_IN') {
-          const supabase = createSupabaseClient();
           await fetchUserData(currentUser.id, supabase);
         } else if (event === 'SIGNED_OUT') {
           setTokenState(null);
@@ -97,23 +95,26 @@ export const RepoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     init();
-  }, []);
+  }, [supabase]);
 
-  const fetchUserData = async (userId: string, supabase: SupabaseClient) => {
+  const fetchUserData = async (userId: string, supabaseClient: SupabaseClient) => {
     setLoading(true);
     console.log("RepoContext: Fetching user data for:", userId);
     try {
-      // Use Server Action to get decrypted settings
-      const settings = await getProfileSettings();
-
-      if (settings) {
-        setTokenState(settings.github_pat);
-        setGeminiApiKeyState(settings.gemini_api_key);
-        setGeminiModelState(settings.gemini_model || 'gemini-3-flash-preview');
+      // Use Server Action to get decrypted settings (Wrap in try/catch so it doesn't block repo fetch)
+      try {
+        const settings = await getProfileSettings();
+        if (settings) {
+          setTokenState(settings.github_pat);
+          setGeminiApiKeyState(settings.gemini_api_key);
+          setGeminiModelState(settings.gemini_model || 'gemini-3-flash-preview');
+        }
+      } catch (settingsError) {
+        console.warn("RepoContext: Failed to load settings (non-critical):", settingsError);
       }
 
       // Fetch repositories using lib/supabase
-      const mappedRepos = await getUserRepositories(supabase, userId);
+      const mappedRepos = await getUserRepositories(supabaseClient, userId);
       setRepositories(mappedRepos);
 
       // Determine current repo by checking the is_current flag
@@ -226,10 +227,18 @@ export const RepoProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const setCurrentRepo = async (repo: Repository) => {
-    if (!user) return;
+    // Fallback: If state user is null (e.g. right after sign-in/refresh before effect runs), check supabase directly
+    let currentUser = user;
+    if (!currentUser) {
+      const { data } = await supabase.auth.getUser();
+      currentUser = data.user;
+    }
+
+    if (!currentUser) return;
+
     setCurrentRepoState(repo);
     try {
-      await updateCurrentRepository(supabase, user.id, repo.id);
+      await updateCurrentRepository(supabase, currentUser.id, repo.id);
     } catch (e) {
       console.error("Failed to update current repo ref", e);
     }

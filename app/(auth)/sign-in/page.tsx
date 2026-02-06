@@ -1,4 +1,3 @@
-import { signInAction } from "@/app/actions/actions";
 import AuthSubmitButton from "@/components/auth-submit-button";
 import { FormMessage, Message } from "@/components/form-message";
 import { Input } from "@/components/ui/input";
@@ -13,7 +12,8 @@ export default async function SignIn(props: {
   return (
     <form
       className="flex-1 flex flex-col w-full max-w-sm mx-auto mt-24"
-      action={signInAction}
+      action="/auth/sign-in"
+      method="post"
     >
       <h1 className="text-2xl font-medium">Sign in</h1>
       <p className="text-sm text-foreground">

@@ -124,7 +124,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 ## 🤝 Support
 
 - 🐛 Found a bug? [Open an issue](https://github.com/rickrods/GitMind/issues)
-- <img src="app/public/gitMind.jpg" width="20" height="20" /> [Gitmind Documentation](https://github.com/rickrods/GitMind/blob/main/Documentation/generateDoc.md)
+- <img src="app/public/gitMind.jpg" width="20" height="20" /> [Gitmind Documentation](https://github.com/rickrods/GitMind/blob/main/Documentation/DetailedDoc.md)
 
 ---
 

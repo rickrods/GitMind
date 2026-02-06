@@ -6,6 +6,8 @@ import { WorkflowRun, GitHubIssue, PullRequest, Repository } from '@/types';
 import { User } from '@supabase/supabase-js';
 import { createSupabaseClient } from '@/lib/supabase/client';
 import { GitHubService } from '@/utils/github';
+import { Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface GitReposProps {
     initialUser: User | null;
@@ -15,7 +17,7 @@ interface GitReposProps {
 }
 
 export default function GitRepos({ initialUser, initialRepo, initialRepositories = [], initialToken }: GitReposProps) {
-    const { currentRepo: contextRepo, setCurrentRepo, repositories: contextRepos, githubService: contextGithubService, user: contextUser } = useRepo();
+    const { currentRepo: contextRepo, setCurrentRepo, repositories: contextRepos, githubService: contextGithubService, user: contextUser, removeRepository, loading } = useRepo();
     const [workflows, setWorkflows] = useState<WorkflowRun[]>([]);
     const [issues, setIssues] = useState<GitHubIssue[]>([]);
     const [pullRequests, setPullRequests] = useState<PullRequest[]>([]);
@@ -27,13 +29,28 @@ export default function GitRepos({ initialUser, initialRepo, initialRepositories
     // Use context data if available, otherwise fallback to server-fetched initial data
     const user = contextUser || initialUser;
     const currentRepo = contextRepo || initialRepo;
-    const repositories = contextRepos.length > 0 ? contextRepos : initialRepositories;
+    // Fix: Only use initialRepositories if context is still loading. 
+    // Otherwise, if context is loaded but empty (user deleted all repos), we should show empty list, not initial.
+    const repositories = loading ? initialRepositories : contextRepos;
 
     const githubService = React.useMemo(() => {
         if (contextGithubService) return contextGithubService;
         if (initialToken) return new GitHubService(initialToken);
         return null;
     }, [contextGithubService, initialToken]);
+
+    const handleRemoveRepo = async (e: React.MouseEvent, repoId: number, repoName: string) => {
+        e.stopPropagation(); // Prevent clicking the card
+        if (window.confirm(`Are you sure you want to remove ${repoName} from your list?`)) {
+            try {
+                await removeRepository(repoId);
+                toast.success(`Removed ${repoName}`);
+            } catch (err) {
+                toast.error("Failed to remove repository");
+                console.error(err);
+            }
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -108,12 +125,21 @@ export default function GitRepos({ initialUser, initialRepo, initialRepositories
                             <div
                                 key={repo.id}
                                 onClick={() => void setCurrentRepo(repo)}
-                                className={`p-5 rounded-lg border cursor-pointer transition-all ${currentRepo?.id === repo.id
+                                className={`group relative p-5 rounded-lg border cursor-pointer transition-all ${currentRepo?.id === repo.id
                                     ? 'bg-github-border/20 border-github-blue ring-1 ring-github-blue/50 shadow-lg shadow-github-blue/5'
                                     : 'bg-github-dark border-github-border hover:border-github-text/50'
                                     }`}
                             >
-                                <div className="flex items-start justify-between mb-2">
+                                <div className="absolute top-4 right-4 z-50">
+                                    <button
+                                        onClick={(e) => handleRemoveRepo(e, repo.id, repo.name)}
+                                        className="p-1.5 text-github-text opacity-50 hover:opacity-100 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all"
+                                        title="Remove Repository"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                                <div className="flex items-start justify-between mb-2 pr-8">
                                     <div className="flex items-center gap-2 overflow-hidden">
                                         <img src={repo.owner.avatar_url} alt={repo.owner.login} className="w-5 h-5 rounded-full" />
                                         <span className={`font-bold text-lg hover:underline truncate ${currentRepo?.id === repo.id ? 'text-github-blue' : 'text-github-text'}`}>{repo.name}</span>
