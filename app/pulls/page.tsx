@@ -146,7 +146,7 @@ export default function PullRequests() {
   };
 
   const handleReviewSubmission = async (pr: PullRequest) => {
-    if (!currentRepo || !pr.aiReview) return;
+    if (!currentRepo || !pr.aiReview || !githubService) return;
     setApproving(pr.id);
     try {
       await submitPullRequestReviewAction(
@@ -156,8 +156,6 @@ export default function PullRequests() {
         pr.aiReview.feedback,
         pr.aiReview.status.toUpperCase() as 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT'
       );
-      // Refresh PRs to update state
-      const prData = await githubService.fetchPullRequests(currentRepo.owner.login, currentRepo.name);
       // Re-merge with existing analyses (simplified for brevity, should ideally refetch analyses too)
       setPrs(prev => prev.map(p => p.id === pr.id ? { ...p, state: 'closed' } : p)); // Optimistic or refetch
       const [newPrData, analysesData] = await Promise.all([
@@ -215,55 +213,55 @@ export default function PullRequests() {
                 <span className="font-mono text-xs bg-github-border px-2 py-1 rounded text-github-text truncate max-w-[100px]">{pr.base.ref}</span>
               </div>
 
-                                                        <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center justify-between mt-4">
 
-                                                          <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
 
-                                                            <img src={pr.user.avatar_url} className="w-5 h-5 rounded-full" alt="User" />
+                  <img src={pr.user.avatar_url} className="w-5 h-5 rounded-full" alt="User" />
 
-                                                            <span className="text-xs text-github-text">{pr.user.login}</span>
+                  <span className="text-xs text-github-text">{pr.user.login}</span>
 
-                                                          </div>
+                </div>
 
-                            
 
-                                                          <div className="flex gap-2">
 
-                                                            <button
+                <div className="flex gap-2">
 
-                                                              onClick={(e) => { e.stopPropagation(); handleReview(pr); }}
+                  <button
 
-                                                              disabled={reviewing === pr.id}
+                    onClick={(e) => { e.stopPropagation(); handleReview(pr); }}
 
-                                                              className="text-[10px] flex items-center gap-1 px-2 py-1 bg-github-purple/20 text-github-purple border border-github-purple/30 rounded hover:bg-github-purple hover:text-white transition-all disabled:opacity-50"
+                    disabled={reviewing === pr.id}
 
-                                                            >
+                    className="text-[10px] flex items-center gap-1 px-2 py-1 bg-github-purple/20 text-github-purple border border-github-purple/30 rounded hover:bg-github-purple hover:text-white transition-all disabled:opacity-50"
 
-                                                              {reviewing === pr.id ? (
+                  >
 
-                                                                <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    {reviewing === pr.id ? (
 
-                                                              ) : (
+                      <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
 
-                                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    ) : (
 
-                                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 
-                                                                </svg>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
 
-                                                              )}
+                      </svg>
 
-                                                              {pr.aiReview ? 'Re-Analyze' : 'AI Analysis'}
+                    )}
 
-                                                            </button>
+                    {pr.aiReview ? 'Re-Analyze' : 'AI Analysis'}
 
-                                                          </div>
+                  </button>
 
-                                                        </div>
+                </div>
 
-                            
+              </div>
 
-              
+
+
+
             </div>
           )) : (
             <div className="p-12 text-center bg-github-dark border border-github-border rounded-xl text-github-text opacity-50">
