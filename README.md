@@ -1,7 +1,7 @@
 <h1 align="center">GitMind</h1>
 
 <p align="center">
-  <strong>Intelligent GitHub repository management powered by Gemini 3.</strong>
+  <strong>Intelligent GitHub repository management powered by Gemini 3. Created for Gemini 3 hackathon on devpost. </strong>
 </p>
 
 <p align="center">
@@ -56,12 +56,6 @@ graph TD
     API -->|Context & Prompts| Gemini
     Gemini -->|Analysis & Code| API
 ```
-
----
-## 🚀 Try it out 
-
-<h3 align="left"><a href="https://git-mind-delta.vercel.app/">✨ Live Demo ✨</a></h3>
-
 ---
 
 ## 🛠️ Local Setup
@@ -126,16 +120,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 - 🐛 Found a bug? [Open an issue](https://github.com/rickrods/GitMind/issues)
 - <img src="app/public/gitMind.jpg" width="20" height="20" /> [Gitmind Documentation](https://github.com/rickrods/GitMind/blob/main/Documentation/DetailedDoc.md)
 
----
 
-# 🌐 Public Project Link
-[git-mind-delta.vercel.app](https://git-mind-delta.vercel.app/)
-
-# 💻 Public Code Repository
-[github.com/rickrods/GitMind](https://github.com/rickrods/GitMind)
-
-# 💻 Demo Video
-[Demo Video](https://youtu.be/_s2fO8CGDaw)
 ---
 
 ## 📄 License
