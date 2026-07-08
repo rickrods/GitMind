@@ -1,7 +1,7 @@
 <h1 align="center">GitMind</h1>
 
 <p align="center">
-  <strong>Intelligent GitHub repository management powered by Gemini 3. Created for Gemini 3 hackathon on devpost. </strong>
+  <strong>Testing Intelligent GitHub repository management powered by Gemini 3. Created for Gemini 3 hackathon on devpost. </strong>
 </p>
 
 <p align="center">
